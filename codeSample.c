@@ -1,3 +1,33 @@
+//Mise en places des cubes du rubiks
+//
+
+    
+    GLfloat transX, transY, transZ;
+    transX = transY = transZ = 0;
+    for(int i=0; i<3; i++){
+        transX = -2.1 + 2.1*i;
+        //On deplace 9 des 27 cubes à gauche et à droite des premiers cubes afin de deployer au fur et à mesure
+        for(int j=0; j<9; j++){
+            translateCube(cube[j+i], transX, transY, transZ);
+        }
+    }
+//ou
+    for(i=0; i<3; i++){
+        for(j=0; j<3; j++){
+            for(k=0; k<3; k++){
+                translateCube(cube[i+j+k], 2.1, 0., 0.);             
+            }
+            translateCube(cube[i+j+k], 0, 2.1, 0.);             
+        }
+        translateCube(cube[i+j+k], 0., 0., 2.1);             
+    }
+
+
+
+
+
+
+
 GLint faces[6][4] = {  /* Vertex indices for the 6 faces of a cube. */
   {0, 1, 2, 3}, {3, 2, 6, 7}, {7, 6, 5, 4},
   {4, 5, 1, 0}, {5, 6, 2, 1}, {7, 4, 0, 3} };

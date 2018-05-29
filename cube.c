@@ -22,13 +22,21 @@ typedef struct _RubiksFace {
 } RubiksFace;
 
 typedef struct _Rubiks {
-    struct _RubiksFace face [6];
+    struct _RubiksFace rubiksFace[6];
 } Rubiks;
 
+typedef enum {
+    DOWN,
+    FRONT,
+    UP,
+    BACK,
+    LEFT,
+    RIGHT
+}enumPosition;
 
 
 void updateLookAt();
-Cube* drawCube(int* center);
+Cube* drawCube();
 void showFace(Face face);
 void showCube(Cube cube);
 
@@ -43,24 +51,24 @@ int faceColor[6][3] = {
     {0,255,255}};
 double camPosR = 9, camPosTheta = 0, camPosPhi = 0;
 
-Face initFace(int* center){
+Face initFace(){
     Face face;
     //jaune par defaut...why not
     face.color[0] = 255;
     face.color[1] = 255;
     face.color[2] = 0;
-    face.corner[0][0] = 1 + center[0]; //top left 
-    face.corner[0][1] = 1 + center[1]; 
-    face.corner[0][2] = -1 + center[2]; 
-    face.corner[1][0] = -1 + center[0]; //top right
-    face.corner[1][1] = 1 + center[1]; 
-    face.corner[1][2] = -1 + center[2]; 
-    face.corner[2][0] = -1 + center[0]; //bottom right
-    face.corner[2][1] = 1 + center[1]; 
-    face.corner[2][2] = 1 + center[2]; 
-    face.corner[3][0] = 1 + center[0]; //bottom left
-    face.corner[3][1] = 1 + center[1]; 
-    face.corner[3][2] = 1 + center[2]; 
+    face.corner[0][0] = 1; //top left 
+    face.corner[0][1] = 1; 
+    face.corner[0][2] = -1; 
+    face.corner[1][0] = -1; //top right
+    face.corner[1][1] = 1 ; 
+    face.corner[1][2] = -1; 
+    face.corner[2][0] = -1; //bottom right
+    face.corner[2][1] = 1 ; 
+    face.corner[2][2] = 1 ; 
+    face.corner[3][0] = 1 ; //bottom left
+    face.corner[3][1] = 1 ; 
+    face.corner[3][2] = 1 ; 
 
     return face;
 }
@@ -120,13 +128,13 @@ GLfloat* rotateCorner(GLfloat corner[3], float radAngle, char axe){
 }
 
 //takes in argument the center of the cube who while be drawned, aka the position
-Cube* drawCube(int* center){
-    Face bottomFace = initFace(center);
-	Face frontFace = initFace(center);
-	Face upFace = initFace(center);
-	Face backFace = initFace(center);
-	Face leftFace = initFace(center);
-	Face rightFace = initFace(center);
+Cube* drawCube(){
+    Face bottomFace = initFace();
+	Face frontFace = initFace();
+	Face upFace = initFace();
+	Face backFace = initFace();
+	Face leftFace = initFace();
+	Face rightFace = initFace();
 	
     for(int i = 0; i<4; i++){
 	    memcpy(frontFace.corner[i], rotateCorner(frontFace.corner[i], PI/2, 'x'), sizeof frontFace.corner[i]);
@@ -215,31 +223,102 @@ void
 drawRubik(void) {
     int center[3] = {0,0,0};
     Cube* cube[27];
+    Rubiks* rubiks = malloc(sizeof(Rubiks)); 
+    RubiksFace rubiksFace[9];
     for(int i=0; i<27; i++){
-        cube[i] = drawCube(center);
+        cube[i] = drawCube();
     }
-    //Cube* cube2 = drawCube(center);
-    //translateCube(cube2, 2.1,0.0,0.0);
-    //showCube(*cube2);
-    int i,j,k;
 
-    translateCube(cube[1],2.1,0,0);
-    translateCube(cube[2],-2.1,0,0);
+    //cube[0] est déjà en place, on va tourner autour
+    //Face
+    translateCube(cube[0], -2.1, 0, 0);
+    translateCube(cube[1], 0, 0, 0);
+    translateCube(cube[2], 2.1, 0, 0);
 
-   /* 
-    for(i=0; i<3; i++){
-        for(j=0; j<3; j++){
-            for(k=0; k<3; k++){
-                translateCube(cube[i+j+k], 2.1, 0., 0.);             
-            }
-            translateCube(cube[i+j+k], 0, 2.1, 0.);             
-        }
-        translateCube(cube[i+j+k], 0., 0., 2.1);             
-    }
-    */
+    translateCube(cube[3], -2.1, -2.1, 0);
+    translateCube(cube[4], 0, -2.1, 0);
+    translateCube(cube[5], 2.1, -2.1, 0);
+
+    translateCube(cube[6], -2.1, 2.1, 0);
+    translateCube(cube[7], 0, 2.1, 0);
+    translateCube(cube[8], 2.1, 2.1, 0);
+    //Cross
+    translateCube(cube[9], 0, 0, 2.1);
+    translateCube(cube[10], 0, 0, -2.1);
+    translateCube(cube[11], 0, 2.1, 2.1);
+    translateCube(cube[12], 0, -2.1, 2.1);
+    translateCube(cube[13], 0, 2.1, -2.1);
+    translateCube(cube[14], 0, -2.1, -2.1);
+    translateCube(cube[15], 2.1, 0, 2.1);
+    translateCube(cube[16], -2.1, 0, 2.1);
+    translateCube(cube[17], 2.1, 0, -2.1);
+    translateCube(cube[18], -2.1, 0, -2.1);
+    //corners
+    translateCube(cube[19], 2.1, 2.1, 2.1);
+    translateCube(cube[20], 2.1, -2.1, 2.1);
+    translateCube(cube[21], -2.1, 2.1, -2.1);
+    translateCube(cube[22], -2.1, -2.1, -2.1);
+    translateCube(cube[23], 2.1, 2.1, -2.1);
+    translateCube(cube[24], -2.1, 2.1, 2.1);
+    translateCube(cube[25], 2.1, -2.1, -2.1);
+    translateCube(cube[26], -2.1, -2.1, 2.1);
+
+    //DOWN, every face translated on Y negativly
+    rubiksFace[0].cube[0] = cube[3]; 
+    rubiksFace[0].cube[1] = cube[4]; 
+    rubiksFace[0].cube[2] = cube[5]; 
+    rubiksFace[0].cube[3] = cube[12]; 
+    rubiksFace[0].cube[4] = cube[14]; 
+    rubiksFace[0].cube[5] = cube[20]; 
+    rubiksFace[0].cube[6] = cube[22]; 
+    rubiksFace[0].cube[7] = cube[25]; 
+    rubiksFace[0].cube[8] = cube[26]; 
+    //FRONT, every face translated on X positivly
+    rubiksFace[1].cube[0] = cube[2]; 
+    rubiksFace[1].cube[1] = cube[5]; 
+    rubiksFace[1].cube[2] = cube[8]; 
+    rubiksFace[1].cube[3] = cube[15]; 
+    rubiksFace[1].cube[4] = cube[17]; 
+    rubiksFace[1].cube[5] = cube[19]; 
+    rubiksFace[1].cube[6] = cube[20]; 
+    rubiksFace[1].cube[7] = cube[23]; 
+    rubiksFace[1].cube[8] = cube[25]; 
+    //UP, every face translated on Y positivly
+    rubiksFace[2].cube[0] = cube[6]; 
+    rubiksFace[2].cube[1] = cube[7]; 
+    rubiksFace[2].cube[2] = cube[8]; 
+    rubiksFace[2].cube[3] = cube[11]; 
+    rubiksFace[2].cube[4] = cube[13]; 
+    rubiksFace[2].cube[5] = cube[19]; 
+    rubiksFace[2].cube[6] = cube[21]; 
+    rubiksFace[2].cube[7] = cube[23]; 
+    rubiksFace[2].cube[8] = cube[24]; 
+    //BACK, every face translated on X negativly
+    rubiksFace[3].cube[0] = cube[0]; 
+    rubiksFace[3].cube[1] = cube[3]; 
+    rubiksFace[3].cube[2] = cube[6]; 
+    rubiksFace[3].cube[3] = cube[16]; 
+    rubiksFace[3].cube[4] = cube[18]; 
+    rubiksFace[3].cube[5] = cube[21]; 
+    rubiksFace[3].cube[6] = cube[22]; 
+    rubiksFace[3].cube[7] = cube[24]; 
+    rubiksFace[3].cube[8] = cube[26]; 
+    //LEFT, every face translated on Z negativly
+    rubiksFace[4].cube[0] = cube[0]; 
+    rubiksFace[4].cube[1] = cube[3]; 
+    rubiksFace[4].cube[2] = cube[6]; 
+    rubiksFace[4].cube[3] = cube[16]; 
+    rubiksFace[4].cube[4] = cube[18]; 
+    rubiksFace[4].cube[5] = cube[21]; 
+    rubiksFace[4].cube[6] = cube[22]; 
+    rubiksFace[4].cube[7] = cube[24]; 
+    rubiksFace[4].cube[8] = cube[26]; 
+
     for(int i=0; i<27; i++){
         showCube(*cube[i]);
     }
+
+
 }
 
 
