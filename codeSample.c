@@ -74,3 +74,70 @@ drawCube(GLfloat v[8][3]){
         glEnd();
     }
 }
+
+
+
+
+/*
+    RubiksFace rubiksFace[6];
+    //DOWN, every face translated on Y negativly
+    rubiksFace[0].cube[0] = *cube[3]; 
+    rubiksFace[0].cube[1] = *cube[4]; 
+    rubiksFace[0].cube[2] = *cube[5]; 
+    rubiksFace[0].cube[3] = *cube[12]; 
+    rubiksFace[0].cube[4] = *cube[14]; 
+    rubiksFace[0].cube[5] = *cube[20]; 
+    rubiksFace[0].cube[6] = *cube[22]; 
+    rubiksFace[0].cube[7] = *cube[25]; 
+    rubiksFace[0].cube[8] = *cube[26]; 
+    //FRONT, every face translated on X positivly
+    rubiksFace[1].cube[0] = *cube[2]; 
+    rubiksFace[1].cube[1] = *cube[5]; 
+    rubiksFace[1].cube[2] = *cube[8]; 
+    rubiksFace[1].cube[3] = *cube[15]; 
+    rubiksFace[1].cube[4] = *cube[17]; 
+    rubiksFace[1].cube[5] = *cube[19]; 
+    rubiksFace[1].cube[6] = *cube[20]; 
+    rubiksFace[1].cube[7] = *cube[23]; 
+    rubiksFace[1].cube[8] = *cube[25]; 
+    //UP, every face translated on Y positivly
+    rubiksFace[2].cube[0] = *cube[6]; 
+    rubiksFace[2].cube[1] = *cube[7]; 
+    rubiksFace[2].cube[2] = *cube[8]; 
+    rubiksFace[2].cube[3] = *cube[11]; 
+    rubiksFace[2].cube[4] = *cube[13]; 
+    rubiksFace[2].cube[5] = *cube[19]; 
+    rubiksFace[2].cube[6] = *cube[21]; 
+    rubiksFace[2].cube[7] = *cube[23]; 
+    rubiksFace[2].cube[8] = *cube[24]; 
+    //BACK, every face translated on X negativly
+    rubiksFace[3].cube[0] = *cube[0]; 
+    rubiksFace[3].cube[1] = *cube[3]; 
+    rubiksFace[3].cube[2] = *cube[6]; 
+    rubiksFace[3].cube[3] = *cube[16]; 
+    rubiksFace[3].cube[4] = *cube[18]; 
+    rubiksFace[3].cube[5] = *cube[21]; 
+    rubiksFace[3].cube[6] = *cube[22]; 
+    rubiksFace[3].cube[7] = *cube[24]; 
+    rubiksFace[3].cube[8] = *cube[26]; 
+    //LEFT, every face translated on Z negativly
+    rubiksFace[4].cube[0] = *cube[0]; 
+    rubiksFace[4].cube[1] = *cube[3]; 
+    rubiksFace[4].cube[2] = *cube[6]; 
+    rubiksFace[4].cube[3] = *cube[16]; 
+    rubiksFace[4].cube[4] = *cube[18]; 
+    rubiksFace[4].cube[5] = *cube[21]; 
+    rubiksFace[4].cube[6] = *cube[22]; 
+    rubiksFace[4].cube[7] = *cube[24]; 
+    rubiksFace[4].cube[8] = *cube[26]; 
+    //LEFT, every face translated on Z prositivly
+    rubiksFace[5].cube[0] = *cube[9]; 
+    rubiksFace[5].cube[1] = *cube[11]; 
+    rubiksFace[5].cube[2] = *cube[12]; 
+    rubiksFace[5].cube[3] = *cube[15]; 
+    rubiksFace[5].cube[4] = *cube[16]; 
+    rubiksFace[5].cube[5] = *cube[19]; 
+    rubiksFace[5].cube[6] = *cube[20]; 
+    rubiksFace[5].cube[7] = *cube[24]; 
+    rubiksFace[5].cube[8] = *cube[26]; 
+    */
