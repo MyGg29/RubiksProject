@@ -3,49 +3,11 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include "header.h"
 
 #define PI 3.14159265
 
 
-typedef struct _Face {
-    GLfloat corner[4][3];
-    GLfloat color[3];
-} Face;
-
-typedef struct _Cube {
-    struct _Face face[6];
-} Cube;
-
-typedef struct _Rubiks {
-    struct _Cube cube[3][3][3];
-} Rubiks;
-
-typedef struct _FaceAPI {
-    int face;//up,down,front,etc
-    int color[9][3];//Une couleur par carré présent sur une face
-}FaceAPI;
-
-typedef struct _RubiksAPI {
-    struct _FaceAPI face[6];//6 faces ds un cube
-} RubiksAPI;
-
-typedef enum {
-    DOWN,
-    FRONT,
-    UP,
-    BACK,
-    LEFT,
-    RIGHT
-}enumPosition;
-
-
-void updateLookAt();
-Cube* drawCube();
-void showFace(Face face);
-void showCube(Cube cube);
-
-GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};  /* Red diffuse light. */
-GLfloat light_position[] = {1.0, 1.0, 1.0, 0.0};  /* Infinite light location. */
 int faceColor[6][3] = { 
     {0,255,0},
     {255,0,0},
@@ -54,13 +16,13 @@ int faceColor[6][3] = {
     {255,0,255},
     {0,255,255}};
 double camPosR = 9, camPosTheta = 0, camPosPhi = 0;
+Rubiks mrubiks;
 
 Face initFace(){
     Face face;
-    //jaune par defaut...why not
     face.color[0] = 255;
     face.color[1] = 255;
-    face.color[2] = 0;
+    face.color[2] = 255;
     face.corner[0][0] = 1; //top left 
     face.corner[0][1] = 1; 
     face.corner[0][2] = -1; 
@@ -91,45 +53,6 @@ void drawAxis() {
 }
 
 
-GLfloat* rotateCorner(GLfloat corner[3], float radAngle, char axe){
-    GLfloat* result = malloc(sizeof(GLfloat)*3); 
-	result[0] = result[1] = result[2] = 0.;
-    //axe doit etre "x", "y" ou "z"
-    //matrice de rotation autour de X
-	float rotationMatrixX [3][3] = { {1, 0, 0},
-									{0, cos(radAngle), -sin(radAngle)},
-									{0, sin(radAngle), cos(radAngle)}
-								  };
-    //autour de Y
-    float rotationMatrixY [3][3] = { {cos(radAngle), 0, sin(radAngle)},
-                                     {0, 1, 0},
-                                     {-sin(radAngle), 0, cos(radAngle)}
-                                  };
-    //autour de Z
-    float rotationMatrixZ [3][3] = { {cos(radAngle), -sin(radAngle), 0},
-                                     {sin(radAngle), cos(radAngle), 0},
-                                     {0, 0, 1}
-                                   };
-    float rotationMatrix[3][3];
-    switch (axe){
-        case 'x':
-           memcpy(rotationMatrix, rotationMatrixX, sizeof(rotationMatrixX));
-           break;
-        case 'y':
-           memcpy(rotationMatrix, rotationMatrixY, sizeof(rotationMatrixY));
-           break;
-        case 'z':
-           memcpy(rotationMatrix, rotationMatrixZ, sizeof(rotationMatrixZ));
-           break;
-    }
-
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++) {
-			result[i] += rotationMatrix[i][j] * corner[j];
-		}
-	}
-	return result;
-}
 
 //takes in argument the center of the cube who while be drawned, aka the position
 Cube* drawCube(){
@@ -156,38 +79,43 @@ Cube* drawCube(){
 	    memcpy(rightFace.corner[i], rotateCorner(rightFace.corner[i], -PI/2, 'z'), sizeof rightFace.corner[i]);
     }
 
-    //jaune
     //bottomFace already initialized as yellow
+    bottomFace.cColor = 'b';
     //vert
     frontFace.color[0] = 0;
     frontFace.color[1] = 255;
     frontFace.color[2] = 0;
+    frontFace.cColor = 'g';
     //blanc
     upFace.color[0] = 255;
     upFace.color[1] = 255;
-    upFace.color[2] = 255;
+    upFace.color[2] = 0;
+    upFace.cColor = 'y';
     //rouge
     backFace.color[0] = 255;
     backFace.color[1] = 0;
     backFace.color[2] = 0;
+    backFace.cColor = 'r';
     //blue
     leftFace.color[0] = 0;
     leftFace.color[1] = 0;
     leftFace.color[2] = 255;
+    leftFace.cColor = 'b';
     //orange
     rightFace.color[0] = 255;
     rightFace.color[1] = 153;
     rightFace.color[2] = 51;
+    rightFace.cColor = 'o';
 
 
     
     Cube* cube = malloc(sizeof(Cube));
-    cube->face[0] = bottomFace; 
-    cube->face[1] = frontFace;
-    cube->face[2] = upFace;
-    cube->face[3] = backFace;
-    cube->face[4] = leftFace;
-    cube->face[5] = rightFace;
+    cube->face[0] = upFace; 
+    cube->face[1] = rightFace;
+    cube->face[2] = bottomFace;
+    cube->face[3] = leftFace;
+    cube->face[4] = frontFace;
+    cube->face[5] = backFace;
     
     return cube;
 }
@@ -212,51 +140,26 @@ void showFace(Face face) {
 }
 
 //le problème avec glTranslate et openGl en général, c'est qu'on au aucuns accès aux résultat des transformations que l'on fait, on est donc obligé de prédire le changement ou de le faire à la main.
-Cube* translateCube(Cube* cube, GLfloat x, GLfloat y, GLfloat z) {
-    for(int i=0; i<6; i++){
-        for(int j=0; j<4; j++){
-            cube->face[i].corner[j][0] += x;
-            cube->face[i].corner[j][1] += y;
-            cube->face[i].corner[j][2] += z;
-        }
-    }
-    return cube;
-}
 
-void initAPI()
+void API(Rubiks rubiks)
 {
-    RubiksAPI rubiksAPI;
-    FaceAPI faceAPI[6];
-    int faceId [6][9] = {
-        {3,4,5,12,14,20,22,25,26}, //Down
-        {2,5,8,15,17,19,20,23,25}, //Front
-        {6,7,8,11,13,19,21,23,24}, //UP
-        {0,3,6,16,18,21,22,24,26}, //back
-        {0,3,6,16,18,21,22,24,26}, //left
-        {9,11,12,15,16,19,20,24,26}//right
-        };
-   /* 
-    printf("\n");
-    for(int i=0; i<6; i++)
-    {
-        printf("face %d\n", i);
-        for(int j=0; j<9; j++)
-        {
-            faceAPI[i].face = i;
-            faceAPI[i].color[j][0] = (*cube[faceId[i][j]]).face[i].color[0];    
-            faceAPI[i].color[j][1] = (*cube[faceId[i][j]]).face[i].color[1];    
-            faceAPI[i].color[j][2] = (*cube[faceId[i][j]]).face[i].color[2];    
-            printf("%d,%d,%d|", faceAPI[i].color[j][0],faceAPI[i].color[j][1],faceAPI[i].color[j][2]);
-        }
-        printf("\n||");
-    }
-    printf("\nend");
+
+    char inputFormat[20];
+    //find edges
+    char color = rubiks.cube[1][0][0].face[FRONT].cColor;
+    char color2 = rubiks.cube[1][0][0].face[UP].cColor;
+    printf("%c, %c", color, color2);
+
+	for(int i=0; i<20; i++)
+	{
+		printf("%s ",rubiks.edgesNCornersPos[i]);
+	}
+    printf(";");
     fflush(stdout);
-    */
+    
 }
 
-Rubiks 
-drawRubik() {
+Rubiks drawRubik() {
     int center[3] = {0,0,0};
     Cube* cube[27];
     Rubiks* rubiks = malloc(sizeof(Rubiks));
@@ -326,10 +229,26 @@ drawRubik() {
     translateCube(cube[26], -2.1, -2.1, 2.1);
     rubiks->cube[2][2][0] = *cube[26];
     
-    
+
+
+
+    //bellow,pos [] makes a writtable string, important for strtok;
+	char pos[] ="UF UR UB UL DF DR DB DL FR FL BR BL UFR URB UBL ULF DRF DFL DLB DBR";
+	char * pch;
+	int i = 0;
+	pch = strtok (pos," ,.-");
+	while (pch != NULL)
+	{
+        char* value = malloc(strlen(pch)*sizeof(char));//allocate only what's needed
+        strcpy(value, pch);
+        rubiks->edgesNCornersPos[i] = value;
+		pch = strtok (NULL, " ,.-");
+		i++;
+	}
     return *rubiks;
 
 }
+
 void showRubiks(Rubiks rubiks)
 {
     for(int i=0; i<3; i++)
@@ -338,139 +257,12 @@ void showRubiks(Rubiks rubiks)
         {
             for(int k=0; k<3; k++)
             {
+                //if(j!=0)
                 showCube(rubiks.cube[i][j][k]);
             }
         }
     }
 }
-
-Cube rotateCube(Cube cube, float angle ,char axe)
-{
-	float trans = 0.0;
-	for(int i=0; i<6; i++)
-	{
-		for(int j=0; j<4; j++){
-			if(axe == 'x')
-			{
-				memcpy(cube.face[i].corner[j],rotateCorner(cube.face[i].corner[j], angle, 'x'), sizeof(cube.face[i].corner[j]));
-
-			}
-			if(axe == 'y')
-			{
-				memcpy(cube.face[i].corner[j],rotateCorner(cube.face[i].corner[j], angle, 'y'), sizeof(cube.face[i].corner[j]));
-
-			}
-			if(axe == 'z')
-			{
-				memcpy(cube.face[i].corner[j],rotateCorner(cube.face[i].corner[j], angle, 'z'), sizeof(cube.face[i].corner[j]));
-
-			}
-		}
-	}
-    return cube;
-}
-
-void rotateFacePatern(Cube movedCubes[3][3], Cube result[3][3])
-{
-    for(int i=0; i<3; ++i)
-    {
-        for(int j=0; j<3; ++j)
-        {
-            result[i][j] = movedCubes[j][3 - i - 1];
-        }
-    }
-    
-}
-
-Rubiks rotateFace(Rubiks rubiks, char face)
-{
-    //pour chaque cube d'une face ....
-    Cube movedCubes[3][3];
-    for(int i=0; i<3; i++)
-    {
-        for(int j=0; j<3; j++)
-        {
-            if(face==FRONT)
-            {
-                rubiks.cube[0][i][j] = rotateCube(rubiks.cube[0][i][j], PI/2, 'x');
-                movedCubes[i][j] = rubiks.cube[0][i][j];
-            }
-            if(face==BACK)
-            {
-                rubiks.cube[2][i][j] = rotateCube(rubiks.cube[2][i][j], PI/2, 'x');
-                movedCubes[i][j] = rubiks.cube[2][i][j];
-            }
-            if(face==DOWN)
-            {
-                rubiks.cube[i][2][j] = rotateCube(rubiks.cube[i][2][j], PI/2, 'y');
-                movedCubes[i][j] = rubiks.cube[i][2][j];
-            }
-            if(face==UP)
-            {
-                rubiks.cube[i][0][j] = rotateCube(rubiks.cube[i][0][j], PI/2, 'y');
-                movedCubes[i][j] = rubiks.cube[i][0][j];
-            }
-            if(face==LEFT)
-            {
-                rubiks.cube[i][j][0] = rotateCube(rubiks.cube[i][j][0], PI/2, 'z');
-                movedCubes[i][j] = rubiks.cube[i][j][0];
-            }
-            if(face==RIGHT)
-            {
-                rubiks.cube[i][j][2] = rotateCube(rubiks.cube[i][j][2], PI/2, 'z');
-                movedCubes[i][j] = rubiks.cube[i][j][2];
-            }
-        }
-    }
-    int test[3][3] = { {1,2,3},{4,5,6},{7,8,9}};
-    Cube result[3][3];
-    
-    rotateFacePatern(movedCubes, result);
-    
-    if(face==FRONT)
-    {
-    for(int i=0; i<3;i++)
-        for(int j=0; j<3;j++)
-            rubiks.cube[0][i][j] = result[i][j];
-    }
-    if(face==BACK)
-    {
-    for(int i=0; i<3;i++)
-        for(int j=0; j<3;j++)
-            rubiks.cube[2][i][j] = result[i][j];
-    }
-    if(face==DOWN)
-    {
-    for(int i=0; i<3;i++)
-        for(int j=0; j<3;j++)
-            rubiks.cube[i][2][j] = result[i][j];
-    }
-    if(face==UP)
-    {
-    for(int i=0; i<3;i++)
-        for(int j=0; j<3;j++)
-            rubiks.cube[i][0][j] = result[i][j];
-    }
-    if(face==LEFT)
-    {
-    for(int i=0; i<3;i++)
-        for(int j=0; j<3;j++)
-            rubiks.cube[i][j][0] = result[i][j];
-    }
-    if(face==RIGHT)
-    {
-    for(int i=0; i<3;i++)
-        for(int j=0; j<3;j++)
-            rubiks.cube[i][j][2] = result[i][j];
-    }
-    for(int i=0; i<3;i++)
-        for(int j=0; j<3;j++)
-            //rubiks.cube[0][i][j] = result[i][j];
-
-    return rubiks;
-}
-
-Rubiks mrubiks;
 
 void display(void)
 {
@@ -479,6 +271,7 @@ void display(void)
     showRubiks(mrubiks);
     updateLookAt();
     drawAxis();
+    API(mrubiks);
     glutSwapBuffers();
 }
 
@@ -486,6 +279,12 @@ void
 init(void)
 {
    mrubiks = drawRubik();
+   printf("out\n");
+	for(int i=0; i<20; i++)
+	{
+		printf("%s ",mrubiks.edgesNCornersPos[i]);
+	}
+    fflush(stdout);
   /* Use depth buffering for hidden surface elimination. */
   glEnable(GL_DEPTH_TEST);
 
@@ -507,7 +306,7 @@ init(void)
 void 
 arrows (int key, int x, int y) 
 {
-    double delta = 0.1;
+    double delta = 0.05;
   	switch(key)
 	{
 		case GLUT_KEY_UP:
@@ -577,6 +376,7 @@ main(int argc, char **argv)
 {
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+  glutInitWindowSize(500,500);
   glutCreateWindow("red 3D lighted cube");
   glutDisplayFunc(display);
   glutSpecialFunc(arrows);
