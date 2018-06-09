@@ -17,11 +17,11 @@ typedef struct _Face {
 
 typedef struct _Cube {
     struct _Face face[6];
+    char* edgesNCornersName; //will containe the partern
 } Cube;
 
 typedef struct _Rubiks {
     struct _Cube cube[3][3][3];
-    char* edgesNCornersPos[20]; //will containe the partern
 } Rubiks;
 
 typedef struct _FaceAPI {

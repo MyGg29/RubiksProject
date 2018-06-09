@@ -144,16 +144,9 @@ void showFace(Face face) {
 void API(Rubiks rubiks)
 {
 
-    char inputFormat[20];
-    //find edges
-    char color = rubiks.cube[1][0][0].face[FRONT].cColor;
-    char color2 = rubiks.cube[1][0][0].face[UP].cColor;
-    printf("%c, %c", color, color2);
+    printf("%s", rubiks.cube[0][0][0].edgesNCornersName);
 
-	for(int i=0; i<20; i++)
-	{
-		printf("%s ",rubiks.edgesNCornersPos[i]);
-	}
+
     printf(";");
     fflush(stdout);
     
@@ -171,63 +164,96 @@ Rubiks drawRubik() {
     //les places
     //Face
     translateCube(cube[0], -2.1, 0, 0);
-    rubiks->cube[2][1][1] = *cube[0];
+    rubiks->cube[2][1][1] = *cube[0];//blue center
+    
+
     translateCube(cube[1], 0, 0, 0);
-    rubiks->cube[1][1][1] = *cube[1];
+    rubiks->cube[1][1][1] = *cube[1];//centre (pas visible)
+    
     translateCube(cube[2], 2.1, 0, 0);
-    rubiks->cube[0][1][1] = *cube[2];
+    rubiks->cube[0][1][1] = *cube[2];//centre orange
 
     translateCube(cube[3], -2.1, -2.1, 0);
     rubiks->cube[2][2][1] = *cube[3];
+    rubiks->cube[2][2][1].edgesNCornersName = "DB";
+
     translateCube(cube[4], 0, -2.1, 0);
-    rubiks->cube[1][2][1] = *cube[4];
+    rubiks->cube[1][2][1] = *cube[4];//yellow center
+    
     translateCube(cube[5], 2.1, -2.1, 0);
     rubiks->cube[0][2][1] = *cube[5];
+    rubiks->cube[0][2][1].edgesNCornersName = "DF";
+
 
     translateCube(cube[6], -2.1, 2.1, 0);
     rubiks->cube[2][0][1] = *cube[6];
+    rubiks->cube[2][0][1].edgesNCornersName = "UB";
+
     translateCube(cube[7], 0, 2.1, 0);
-    rubiks->cube[1][0][1] = *cube[7];
+    rubiks->cube[1][0][1] = *cube[7];//centre blanc
+
     translateCube(cube[8], 2.1, 2.1, 0);
     rubiks->cube[0][0][1] = *cube[8];
+    rubiks->cube[0][0][1].edgesNCornersName = "UF";
     //Cross
     translateCube(cube[9], 0, 0, 2.1);
-    rubiks->cube[1][1][0] = *cube[9];
+    rubiks->cube[1][1][0] = *cube[9];//Green center
     translateCube(cube[10], 0, 0, -2.1);
-    rubiks->cube[1][1][2] = *cube[10];
+    rubiks->cube[1][1][2] = *cube[10];//Red center
     translateCube(cube[11], 0, 2.1, 2.1);
     rubiks->cube[1][0][0] = *cube[11];
+    rubiks->cube[1][0][0].edgesNCornersName = "UL";
     translateCube(cube[12], 0, -2.1, 2.1);
     rubiks->cube[1][2][0] = *cube[12];
+    rubiks->cube[1][2][0].edgesNCornersName = "DL";
+
     translateCube(cube[13], 0, 2.1, -2.1);
     rubiks->cube[1][0][2] = *cube[13];
+    rubiks->cube[1][0][2].edgesNCornersName = "UR";
+
     translateCube(cube[14], 0, -2.1, -2.1);
     rubiks->cube[1][2][2] = *cube[14];
+    rubiks->cube[1][2][2].edgesNCornersName = "DR";
+    
     translateCube(cube[15], 2.1, 0, 2.1);
     rubiks->cube[0][1][0] = *cube[15];
+    rubiks->cube[0][1][0].edgesNCornersName = "FL";
+
     translateCube(cube[16], -2.1, 0, 2.1);
     rubiks->cube[2][1][0] = *cube[16];
+    rubiks->cube[2][1][0].edgesNCornersName = "BL";
+
     translateCube(cube[17], 2.1, 0, -2.1);
     rubiks->cube[0][1][2] = *cube[17];
+    rubiks->cube[0][1][2].edgesNCornersName = "FL";
     translateCube(cube[18], -2.1, 0, -2.1);
     rubiks->cube[2][1][2] = *cube[18];
+    rubiks->cube[2][1][2].edgesNCornersName = "BR";
     //corners
     translateCube(cube[19], 2.1, 2.1, 2.1);
     rubiks->cube[0][0][0] = *cube[19];
+    rubiks->cube[0][0][0].edgesNCornersName = "ULF";
     translateCube(cube[20], 2.1, -2.1, 2.1);
     rubiks->cube[0][2][0] = *cube[20];
+    rubiks->cube[0][2][0].edgesNCornersName = "DFL";
     translateCube(cube[21], -2.1, 2.1, -2.1);
     rubiks->cube[2][0][2] = *cube[21];
+    rubiks->cube[2][0][2].edgesNCornersName = "URB";
     translateCube(cube[22], -2.1, -2.1, -2.1);
     rubiks->cube[2][2][2] = *cube[22];
+    rubiks->cube[2][2][2].edgesNCornersName = "DBR";
     translateCube(cube[23], 2.1, 2.1, -2.1);
     rubiks->cube[0][0][2] = *cube[23];
+    rubiks->cube[0][0][2].edgesNCornersName = "UFR";
     translateCube(cube[24], -2.1, 2.1, 2.1);
     rubiks->cube[2][0][0] = *cube[24];
+    rubiks->cube[2][0][0].edgesNCornersName = "UBL";
     translateCube(cube[25], 2.1, -2.1, -2.1);
     rubiks->cube[0][2][2] = *cube[25];
+    rubiks->cube[2][0][2].edgesNCornersName = "DRF";
     translateCube(cube[26], -2.1, -2.1, 2.1);
     rubiks->cube[2][2][0] = *cube[26];
+    rubiks->cube[2][2][0].edgesNCornersName = "DLB";
     
 
 
@@ -241,7 +267,7 @@ Rubiks drawRubik() {
 	{
         char* value = malloc(strlen(pch)*sizeof(char));//allocate only what's needed
         strcpy(value, pch);
-        rubiks->edgesNCornersPos[i] = value;
+        //rubiks->edgesNCornersPos[i] = value;
 		pch = strtok (NULL, " ,.-");
 		i++;
 	}
@@ -257,7 +283,7 @@ void showRubiks(Rubiks rubiks)
         {
             for(int k=0; k<3; k++)
             {
-                //if(j!=0)
+                if(i!=1 || j != 2 || k != 2)
                 showCube(rubiks.cube[i][j][k]);
             }
         }
@@ -282,7 +308,6 @@ init(void)
    printf("out\n");
 	for(int i=0; i<20; i++)
 	{
-		printf("%s ",mrubiks.edgesNCornersPos[i]);
 	}
     fflush(stdout);
   /* Use depth buffering for hidden surface elimination. */
