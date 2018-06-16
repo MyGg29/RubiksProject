@@ -1,7 +1,7 @@
-
 #include <GL/glut.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "header.h"
 
@@ -17,6 +17,8 @@ int faceColor[6][3] = {
     {0,255,255}};
 double camPosR = 9, camPosTheta = 0, camPosPhi = 0;
 Rubiks mrubiks;
+Rubiks msolvedRubiks;
+int reverseRotation = 0;
 
 Face initFace(){
     Face face;
@@ -81,25 +83,25 @@ Cube* drawCube(){
 
     //bottomFace already initialized as yellow
     bottomFace.cColor = 'b';
-    //vert
+    //bleu
     frontFace.color[0] = 0;
-    frontFace.color[1] = 255;
-    frontFace.color[2] = 0;
+    frontFace.color[1] = 0;
+    frontFace.color[2] = 255;
     frontFace.cColor = 'g';
     //blanc
     upFace.color[0] = 255;
     upFace.color[1] = 255;
     upFace.color[2] = 0;
     upFace.cColor = 'y';
-    //rouge
-    backFace.color[0] = 255;
-    backFace.color[1] = 0;
+    //vert
+    backFace.color[0] = 0;
+    backFace.color[1] = 255;
     backFace.color[2] = 0;
     backFace.cColor = 'r';
     //blue
-    leftFace.color[0] = 0;
+    leftFace.color[0] = 255;
     leftFace.color[1] = 0;
-    leftFace.color[2] = 255;
+    leftFace.color[2] = 0;
     leftFace.cColor = 'b';
     //orange
     rightFace.color[0] = 255;
@@ -141,15 +143,145 @@ void showFace(Face face) {
 
 //le problème avec glTranslate et openGl en général, c'est qu'on au aucuns accès aux résultat des transformations que l'on fait, on est donc obligé de prédire le changement ou de le faire à la main.
 
+
+void doTPermutation()
+{
+    //T permutation
+    //R U' R’ U R’ F' R2 U R’ U R U' R’ F 
+    //from https://ruwix.com/the-rubiks-cube/how-to-solve-the-rubiks-cube-blindfolded-tutorial/ with changes because my F is the site F'. Same between U and U'
+    mrubiks = rotateFace(mrubiks, RIGHT, PI/2);
+    mrubiks = rotateFace(mrubiks, UP, -PI/2);
+    mrubiks = rotateFace(mrubiks, RIGHT, -PI/2);
+    mrubiks = rotateFace(mrubiks, UP, PI/2);
+    mrubiks = rotateFace(mrubiks, RIGHT, -PI/2);
+    mrubiks = rotateFace(mrubiks, FRONT, -PI/2);
+    mrubiks = rotateFace(mrubiks, RIGHT, PI/2);
+    mrubiks = rotateFace(mrubiks, RIGHT, PI/2);
+    mrubiks = rotateFace(mrubiks, UP, PI/2);
+    mrubiks = rotateFace(mrubiks, RIGHT, -PI/2);
+    mrubiks = rotateFace(mrubiks, UP, PI/2);
+    mrubiks = rotateFace(mrubiks, RIGHT, PI/2);
+    mrubiks = rotateFace(mrubiks, UP, -PI/2);
+    mrubiks = rotateFace(mrubiks, RIGHT, -PI/2);
+    mrubiks = rotateFace(mrubiks, FRONT, PI/2);
+}
+
+int* find(char* edgeName, Rubiks rubiks)
+{
+    int* result = malloc(3*sizeof(int));
+    for(int i=0; i<3; i++)
+        for(int j=0; j<3; j++)
+            for(int k=0; k<3; k++)
+                if(strcmp(edgeName, rubiks.cube[i][j][k].edgesNCornersName)==0)
+                {
+                    *result = i; 
+                    *(result+1) = j; 
+                    *(result+2) = k; 
+                }
+    return result;
+}
+
 void API(Rubiks rubiks)
 {
+    //Y permutation
+    //F' R U R’ U R U' R’ F R U' R’ U R’ F' R F 
+    //
 
-    printf("%s", rubiks.cube[0][0][0].edgesNCornersName);
+    char* edgesName[11] = {"FL","FR","DF","UF","UL","DL","DR","UB","BL","BR","BD"};
+    //All moves followed by the angle to move them, so so 1 is PI/2, -1 is -PI/2
+    int* edgesPreMoves[11] = {
+        (int[2]){LEFT,1},
+        (int[6]){UP,1,FRONT,1,UP,-1},
+        (int[6]){DOWN,-1,LEFT,1,LEFT,1},
+        (int[8]){RIGHT,1,FRONT,1,RIGHT,-1,LEFT,1},
+        (int[0]){},//no moves requiered to move it to the right pos
+        (int[4]){LEFT,1,LEFT,1},
+        (int[8]){DOWN,1,DOWN,1,LEFT,1,LEFT,1},//minus are for opposite rotations
+        (int[8]){RIGHT,-1,BACK,1,RIGHT,1,LEFT,-1},
+        (int[2]){LEFT,-1},
+        (int[6]){UP,-1,BACK,1,UP,1},
+        (int[6]){DOWN,1,LEFT,1,LEFT,1}
+    };
+    int premovesSize[11] = {2,6,6,8,0,4,8,8,2,6,6};
+    char* edgesDone[20] = {"FL","0","FR","0","DF","0","UF","0","DL","0","DR","0","UB","0","BL","0","BR","0","BD","0"};
 
+    int* rightBufferPos;
+    char* inBuffer = rubiks.cube[1][0][2].edgesNCornersName;//what in the buffer
+    printf("inBuffer %s", inBuffer);
+    fflush(stdout);
+    rightBufferPos = find(inBuffer, msolvedRubiks);//Where buffer is supposed to be
 
-    printf(";");
+    if(*(rightBufferPos) != 1 || *(rightBufferPos+1) != 0 || *(rightBufferPos+2) != 2)//the buffer isn't blocked 
+    {
+        int index=0;
+        printf("segFault ? ");
+        fflush(stdout);
+        for(index=0;strcmp(edgesName[index],inBuffer)!=0;index++);//We get the index of the buffer in edgesName
+       // while(strcmp(edgesName[index],inBuffer)!=0)
+       // {
+       //    index++;
+       // }
+        //apply the premoves
+        for(int i=0; i<premovesSize[index]; i=i+2)
+        {
+            float angle = PI/2*edgesPreMoves[index][i+1];
+            mrubiks = rotateFace(mrubiks, edgesPreMoves[index][i],angle);
+        }
+
+        doTPermutation();
+
+        //Do the opposites of the premoves
+        for(int i=premovesSize[index]-2; i>=0; i=i-2)
+        {
+            float angle = -PI/2*edgesPreMoves[index][i+1];
+            mrubiks = rotateFace(mrubiks, edgesPreMoves[index][i],angle);
+        }
+        //edgesDone[index*2+1] = "1";
+            //printf("%s,",edgesDone[19]);
+        //    fflush(stdout);
+    }
+    else//the buffer is blocked
+    {
+        
+    }
+
+        
+
+   /* 
+    printf("\n");
+    for(int i=0; i<3; i++)
+    {
+        for(int j=0; j<3; j++)
+        {
+            for(int k=0; k<3; k++)
+                //printf("%s\t,", rubiks.cube[i][j][k].edgesNCornersName);
+        printf("\n");
+        }
+    printf("\n");
+    }
+    */
+    int solved = isEqual(rubiks, msolvedRubiks);
+    //printf("Solved ? : %d ", solved);
+
+    //printf(";");
     fflush(stdout);
     
+}
+
+void resetCube()
+{
+    mrubiks = drawRubik();
+}
+
+int isEqual(Rubiks rubiks, Rubiks rubiks2)
+{
+    int equal = 1;
+    for(int i=0; i<3; i++)
+        for(int j=0; j<3; j++)
+            for(int k=0; k<3; k++)
+                if(rubiks.cube[i][j][k].edgesNCornersName != rubiks2.cube[i][j][k].edgesNCornersName)
+                    equal = 0;
+    return equal;
 }
 
 Rubiks drawRubik() {
@@ -165,13 +297,16 @@ Rubiks drawRubik() {
     //Face
     translateCube(cube[0], -2.1, 0, 0);
     rubiks->cube[2][1][1] = *cube[0];//blue center
+    rubiks->cube[2][1][1].edgesNCornersName = "B";
     
 
     translateCube(cube[1], 0, 0, 0);
     rubiks->cube[1][1][1] = *cube[1];//centre (pas visible)
+    rubiks->cube[1][1][1].edgesNCornersName = "C";
     
     translateCube(cube[2], 2.1, 0, 0);
     rubiks->cube[0][1][1] = *cube[2];//centre orange
+    rubiks->cube[0][1][1].edgesNCornersName = "O";
 
     translateCube(cube[3], -2.1, -2.1, 0);
     rubiks->cube[2][2][1] = *cube[3];
@@ -179,6 +314,7 @@ Rubiks drawRubik() {
 
     translateCube(cube[4], 0, -2.1, 0);
     rubiks->cube[1][2][1] = *cube[4];//yellow center
+    rubiks->cube[1][2][1].edgesNCornersName = "Y";
     
     translateCube(cube[5], 2.1, -2.1, 0);
     rubiks->cube[0][2][1] = *cube[5];
@@ -191,6 +327,7 @@ Rubiks drawRubik() {
 
     translateCube(cube[7], 0, 2.1, 0);
     rubiks->cube[1][0][1] = *cube[7];//centre blanc
+    rubiks->cube[1][0][1].edgesNCornersName = "W";
 
     translateCube(cube[8], 2.1, 2.1, 0);
     rubiks->cube[0][0][1] = *cube[8];
@@ -198,8 +335,10 @@ Rubiks drawRubik() {
     //Cross
     translateCube(cube[9], 0, 0, 2.1);
     rubiks->cube[1][1][0] = *cube[9];//Green center
+    rubiks->cube[1][1][0].edgesNCornersName = "G";
     translateCube(cube[10], 0, 0, -2.1);
     rubiks->cube[1][1][2] = *cube[10];//Red center
+    rubiks->cube[1][1][2].edgesNCornersName = "R";
     translateCube(cube[11], 0, 2.1, 2.1);
     rubiks->cube[1][0][0] = *cube[11];
     rubiks->cube[1][0][0].edgesNCornersName = "UL";
@@ -225,7 +364,7 @@ Rubiks drawRubik() {
 
     translateCube(cube[17], 2.1, 0, -2.1);
     rubiks->cube[0][1][2] = *cube[17];
-    rubiks->cube[0][1][2].edgesNCornersName = "FL";
+    rubiks->cube[0][1][2].edgesNCornersName = "FR";
     translateCube(cube[18], -2.1, 0, -2.1);
     rubiks->cube[2][1][2] = *cube[18];
     rubiks->cube[2][1][2].edgesNCornersName = "BR";
@@ -250,27 +389,12 @@ Rubiks drawRubik() {
     rubiks->cube[2][0][0].edgesNCornersName = "UBL";
     translateCube(cube[25], 2.1, -2.1, -2.1);
     rubiks->cube[0][2][2] = *cube[25];
-    rubiks->cube[2][0][2].edgesNCornersName = "DRF";
+    rubiks->cube[0][2][2].edgesNCornersName = "DRF";
     translateCube(cube[26], -2.1, -2.1, 2.1);
     rubiks->cube[2][2][0] = *cube[26];
     rubiks->cube[2][2][0].edgesNCornersName = "DLB";
     
 
-
-
-    //bellow,pos [] makes a writtable string, important for strtok;
-	char pos[] ="UF UR UB UL DF DR DB DL FR FL BR BL UFR URB UBL ULF DRF DFL DLB DBR";
-	char * pch;
-	int i = 0;
-	pch = strtok (pos," ,.-");
-	while (pch != NULL)
-	{
-        char* value = malloc(strlen(pch)*sizeof(char));//allocate only what's needed
-        strcpy(value, pch);
-        //rubiks->edgesNCornersPos[i] = value;
-		pch = strtok (NULL, " ,.-");
-		i++;
-	}
     return *rubiks;
 
 }
@@ -283,7 +407,7 @@ void showRubiks(Rubiks rubiks)
         {
             for(int k=0; k<3; k++)
             {
-                if(i!=1 || j != 2 || k != 2)
+                //if(i!=1 || j!=0 || k != 0)
                 showCube(rubiks.cube[i][j][k]);
             }
         }
@@ -297,7 +421,6 @@ void display(void)
     showRubiks(mrubiks);
     updateLookAt();
     drawAxis();
-    API(mrubiks);
     glutSwapBuffers();
 }
 
@@ -305,13 +428,16 @@ void
 init(void)
 {
    mrubiks = drawRubik();
+   msolvedRubiks = drawRubik();
    printf("out\n");
 	for(int i=0; i<20; i++)
 	{
 	}
     fflush(stdout);
   /* Use depth buffering for hidden surface elimination. */
+  glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable(GL_DEPTH_TEST);
+  glEnable(GL_POLYGON_SMOOTH);
 
   /* Setup the view of the cube. */
   glMatrixMode(GL_PROJECTION);
@@ -331,6 +457,7 @@ init(void)
 void 
 arrows (int key, int x, int y) 
 {
+
     double delta = 0.05;
   	switch(key)
 	{
@@ -351,37 +478,45 @@ arrows (int key, int x, int y)
             camPosR -= 1;
 		break;
 	}
+    if(camPosTheta>PI/2)
+        camPosTheta=PI/2;
+    if(camPosTheta<-PI/2)
+        camPosTheta=-PI/2;;
 	glutPostRedisplay();
 }
 void key (unsigned char key, int xmouse, int ymouse)
 {
+    float angle;
+    if(glutGetModifiers() == GLUT_ACTIVE_ALT)
+        angle = -PI/2;
+    else
+        angle = PI/2;
     switch(key){
         case 'f':
-            mrubiks = rotateFace(mrubiks, FRONT);
-            glutPostRedisplay();
+            mrubiks = rotateFace(mrubiks, FRONT, angle);
             break;
         case 'b':
-            mrubiks = rotateFace(mrubiks, BACK);
-            glutPostRedisplay();
+            mrubiks = rotateFace(mrubiks, BACK, angle);
             break;
         case 'd':
-            mrubiks = rotateFace(mrubiks, DOWN);
-            glutPostRedisplay();
+            mrubiks = rotateFace(mrubiks, DOWN, angle);
             break;
         case 'u':
-            mrubiks = rotateFace(mrubiks, UP);
-            glutPostRedisplay();
+            mrubiks = rotateFace(mrubiks, UP, angle);
             break;
         case 'l':
-            mrubiks = rotateFace(mrubiks, LEFT);
-            glutPostRedisplay();
+            mrubiks = rotateFace(mrubiks, LEFT, angle);
             break;
         case 'r':
-            mrubiks = rotateFace(mrubiks, RIGHT);
-            glutPostRedisplay();
+            mrubiks = rotateFace(mrubiks, RIGHT, angle);
+            break;
+        case '1':
+            resetCube();
+        case '5':
+            API(mrubiks);
             break;
     }
-    fflush(stdout);
+    glutPostRedisplay();
 }
 
 void updateLookAt()

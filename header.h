@@ -6,7 +6,13 @@ typedef enum {
     UP,
     BACK,
     LEFT,
-    RIGHT
+    RIGHT,
+    IDOWN,
+    IFRONT,
+    IUP,
+    IBACK,
+    ILEFT,
+    IRIGHT
 }enumPosition;
 
 typedef struct _Face {
@@ -33,12 +39,19 @@ typedef struct _RubiksAPI {
     struct _FaceAPI face[6];//6 faces ds un cube
 } RubiksAPI;
 
+typedef struct _Premove {
+    char* edgeName;
+    int* preMoves;
+}Premove;
+
 Cube* translateCube(Cube* cube, GLfloat x, GLfloat y, GLfloat z);
 Cube rotateCube(Cube cube, float angle ,char axe);
-Rubiks rotateFace(Rubiks rubiks, char face);
+Rubiks rotateFace(Rubiks rubiks, char face, float angle);
 GLfloat* rotateCorner(GLfloat corner[3], float radAngle, char axe);
-void rotateFacePatern(Cube movedCubes[3][3], Cube result[3][3], int face);
+void rotateFacePatern(Cube movedCubes[3][3],int angle, Cube result[3][3], int face);
 void updateLookAt();
 Cube* drawCube();
 void showFace(Face face);
 void showCube(Cube cube);
+int isEqual(Rubiks rubiks, Rubiks rubiks2);
+Rubiks drawRubik();

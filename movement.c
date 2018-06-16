@@ -1,6 +1,7 @@
 #include "header.h"
 #include <math.h>
 #include <string.h>
+#include <stdio.h>
 
 #define PI 3.14159265
 
@@ -15,19 +16,25 @@ Cube* translateCube(Cube* cube, GLfloat x, GLfloat y, GLfloat z) {
     return cube;
 }
 
-void rotateFacePatern(Cube movedCubes[3][3], Cube result[3][3], int face)
+void rotateFacePatern(Cube movedCubes[3][3],int angle, Cube result[3][3], int face)
 {
     for(int i=0; i<3; ++i)
     {
         for(int j=0; j<3; ++j)
         {
-            if(face != UP && face != DOWN) //cas particulier pour 2 faces
+            if(face != UP && face != DOWN) 
             {
-                result[i][j] = movedCubes[j][3 - i - 1];
+                if(angle>0)
+                    result[i][j] = movedCubes[j][3 - i - 1];
+                if(angle<0)
+                    result[i][j] = movedCubes[3 - j - 1][i];
             }
-            if(face == UP || face == DOWN)
+            if(face == UP || face == DOWN)//cas particulier pour 2 faces, "it's a feature"
             {
-                result[i][j] = movedCubes[3 - j - 1][i];
+                if(angle>0)
+                    result[i][j] = movedCubes[3 - j - 1][i];
+                if(angle<0)
+                    result[i][j] = movedCubes[j][3 - i - 1];
             }
         }
     }
@@ -58,8 +65,7 @@ Cube rotateCube(Cube cube, float angle ,char axe)
     return cube;
 }
 
-
-Rubiks rotateFace(Rubiks rubiks, char face)
+Rubiks rotateFace(Rubiks rubiks, char face, float angle)
 {
     //pour chaque cube d'une face ....
     Cube movedCubes[3][3];
@@ -69,40 +75,41 @@ Rubiks rotateFace(Rubiks rubiks, char face)
         {
             if(face==FRONT)
             {
-                rubiks.cube[0][i][j] = rotateCube(rubiks.cube[0][i][j], PI/2, 'x');
+                rubiks.cube[0][i][j] = rotateCube(rubiks.cube[0][i][j], angle, 'x');
                 movedCubes[i][j] = rubiks.cube[0][i][j];
             }
             if(face==BACK)
             {
-                rubiks.cube[2][i][j] = rotateCube(rubiks.cube[2][i][j], PI/2, 'x');
+                rubiks.cube[2][i][j] = rotateCube(rubiks.cube[2][i][j], angle, 'x');
                 movedCubes[i][j] = rubiks.cube[2][i][j];
             }
             if(face==DOWN)
             {
-                rubiks.cube[i][2][j] = rotateCube(rubiks.cube[i][2][j], PI/2, 'y');
+                rubiks.cube[i][2][j] = rotateCube(rubiks.cube[i][2][j], angle, 'y');
                 movedCubes[i][j] = rubiks.cube[i][2][j];
             }
             if(face==UP)
             {
-                rubiks.cube[i][0][j] = rotateCube(rubiks.cube[i][0][j], PI/2, 'y');
+                rubiks.cube[i][0][j] = rotateCube(rubiks.cube[i][0][j], angle, 'y');
                 movedCubes[i][j] = rubiks.cube[i][0][j];
             }
             if(face==LEFT)
             {
-                rubiks.cube[i][j][0] = rotateCube(rubiks.cube[i][j][0], PI/2, 'z');
+                rubiks.cube[i][j][0] = rotateCube(rubiks.cube[i][j][0], angle, 'z');
                 movedCubes[i][j] = rubiks.cube[i][j][0];
             }
             if(face==RIGHT)
             {
-                rubiks.cube[i][j][2] = rotateCube(rubiks.cube[i][j][2], PI/2, 'z');
+                rubiks.cube[i][j][2] = rotateCube(rubiks.cube[i][j][2], angle, 'z');
                 movedCubes[i][j] = rubiks.cube[i][j][2];
             }
         }
     }
     Cube result[3][3];
     
-    rotateFacePatern(movedCubes, result, face);
+    rotateFacePatern(movedCubes, angle, result, face);
     
+    //can't assign a array to another array
     if(face==FRONT)
     {
     for(int i=0; i<3;i++)
