@@ -283,7 +283,7 @@ void API(Rubiks rubiks)
     resetNbMovement();//the number of movements the rubiks made (incremented in movement.c)
     printf("SolvingSequence : \n");
     mrubiks = solve(mrubiks, msolvedRubiks);
-    printf("\"Resolu\" en %d movements", getNbMovement());
+    printf("\n\"Resolu\" en %d movements", getNbMovement());
     fflush(stdout);
 }
 
