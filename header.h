@@ -6,14 +6,10 @@ typedef enum {
     UP,
     BACK,
     LEFT,
-    RIGHT,
-    IDOWN,
-    IFRONT,
-    IUP,
-    IBACK,
-    ILEFT,
-    IRIGHT
-}enumPosition;
+    RIGHT
+}enumRotation;
+
+
 
 typedef struct _Face {
     GLfloat corner[4][3];
@@ -50,8 +46,20 @@ Rubiks rotateFace(Rubiks rubiks, char face, float angle);
 GLfloat* rotateCorner(GLfloat corner[3], float radAngle, char axe);
 void rotateFacePatern(Cube movedCubes[3][3],int angle, Cube result[3][3], int face);
 void updateLookAt();
-Cube* drawCube();
+Face initFace();
+void drawAxis();
+Cube* initCube();
 void showFace(Face face);
 void showCube(Cube cube);
 int isEqual(Rubiks rubiks, Rubiks rubiks2);
-Rubiks drawRubik();
+Rubiks initRubik();
+Rubiks doTPermutation(Rubiks rubiks);
+int* find(char* edgeName, Rubiks rubiks);
+Rubiks solveEdges(Rubiks rubiks, Rubiks solvedRubiks);
+int areEqual(Rubiks rubiks, Rubiks rubiks2);
+Rubiks doYPermutation(Rubiks rubiks);
+Rubiks solveCorners(Rubiks rubiks, Rubiks solvedRubiks);
+Rubiks scrambleRubiks(Rubiks rubiks);
+Rubiks solve(Rubiks rubiks, Rubiks solvedRubiks);
+void resetNbMovement();
+int getNbMovement();

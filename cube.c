@@ -1,347 +1,74 @@
 #include <GL/glut.h>
 #include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "header.h"
 
 #define PI 3.14159265
 
-
-int faceColor[6][3] = { 
-    {0,255,0},
-    {255,0,0},
-    {0,0,255},
-    {255,255,0},
-    {255,0,255},
-    {0,255,255}};
 double camPosR = 9, camPosTheta = 0, camPosPhi = 0;
-Rubiks mrubiks;
-Rubiks msolvedRubiks;
-int reverseRotation = 0;
+Rubiks mrubiks;//the rubiks we are
+Rubiks msolvedRubiks;//the rubiks we aim to be
 
-Face initFace(){
-    Face face;
-    face.color[0] = 255;
-    face.color[1] = 255;
-    face.color[2] = 255;
-    face.corner[0][0] = 1; //top left 
-    face.corner[0][1] = 1; 
-    face.corner[0][2] = -1; 
-    face.corner[1][0] = -1; //top right
-    face.corner[1][1] = 1 ; 
-    face.corner[1][2] = -1; 
-    face.corner[2][0] = -1; //bottom right
-    face.corner[2][1] = 1 ; 
-    face.corner[2][2] = 1 ; 
-    face.corner[3][0] = 1 ; //bottom left
-    face.corner[3][1] = 1 ; 
-    face.corner[3][2] = 1 ; 
-
-    return face;
-}
-
-void drawAxis() {
-    glColor3f(1.0, 1.0, 1.0);
-    glRasterPos3i(0,0,4);
-    glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, 'Z');
-    glRasterPos3i(0,4,0);
-    glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, 'Y');
-    glRasterPos3i(4,0,0);
-    glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, 'X');
-    glRasterPos3i(0,0,0);
-    glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, 'O');
-	
-}
-
-
-
-//takes in argument the center of the cube who while be drawned, aka the position
-Cube* drawCube(){
-    Face bottomFace = initFace();
-	Face frontFace = initFace();
-	Face upFace = initFace();
-	Face backFace = initFace();
-	Face leftFace = initFace();
-	Face rightFace = initFace();
-	
-    for(int i = 0; i<4; i++){
-	    memcpy(frontFace.corner[i], rotateCorner(frontFace.corner[i], PI/2, 'x'), sizeof frontFace.corner[i]);
-    }
-    for(int i = 0; i<4; i++){
-	    memcpy(upFace.corner[i], rotateCorner(upFace.corner[i], PI, 'x'), sizeof upFace.corner[i]);
-    }
-    for(int i = 0; i<4; i++){
-	    memcpy(backFace.corner[i], rotateCorner(backFace.corner[i], 3*PI/2, 'x'), sizeof backFace.corner[i]);
-    }
-    for(int i = 0; i<4; i++){
-	    memcpy(leftFace.corner[i], rotateCorner(leftFace.corner[i], PI/2, 'z'), sizeof leftFace.corner[i]);
-    }
-    for(int i = 0; i<4; i++){
-	    memcpy(rightFace.corner[i], rotateCorner(rightFace.corner[i], -PI/2, 'z'), sizeof rightFace.corner[i]);
-    }
-
-    //bottomFace already initialized as yellow
-    bottomFace.cColor = 'b';
-    //bleu
-    frontFace.color[0] = 0;
-    frontFace.color[1] = 0;
-    frontFace.color[2] = 255;
-    frontFace.cColor = 'g';
-    //blanc
-    upFace.color[0] = 255;
-    upFace.color[1] = 255;
-    upFace.color[2] = 0;
-    upFace.cColor = 'y';
-    //vert
-    backFace.color[0] = 0;
-    backFace.color[1] = 255;
-    backFace.color[2] = 0;
-    backFace.cColor = 'r';
-    //blue
-    leftFace.color[0] = 255;
-    leftFace.color[1] = 0;
-    leftFace.color[2] = 0;
-    leftFace.cColor = 'b';
-    //orange
-    rightFace.color[0] = 255;
-    rightFace.color[1] = 153;
-    rightFace.color[2] = 51;
-    rightFace.cColor = 'o';
-
-
-    
-    Cube* cube = malloc(sizeof(Cube));
-    cube->face[0] = upFace; 
-    cube->face[1] = rightFace;
-    cube->face[2] = bottomFace;
-    cube->face[3] = leftFace;
-    cube->face[4] = frontFace;
-    cube->face[5] = backFace;
-    
-    return cube;
-}
-
-void showCube(Cube cube){
-    for(int i=0; i<6; i++){
-        showFace(cube.face[i]);
-    }
-}
-
-void showFace(Face face) {
-    glBegin(GL_QUADS);
-    glColor3ub(face.color[0], face.color[1], face.color[2]);
-    //glNormal3f(0.0, 1.0, 0.0);
-	glVertex3f(face.corner[0][0], face.corner[0][1], face.corner[0][2]);
-	glVertex3f(face.corner[1][0], face.corner[1][1], face.corner[1][2]);
-    //Commented for now but this line adds gradients to the color
-    //glColor3f(face.color[0] - 0.2, face.color[1] - 0.2, face.color[2]);
-	glVertex3f(face.corner[2][0], face.corner[2][1], face.corner[2][2]);
-	glVertex3f(face.corner[3][0], face.corner[3][1], face.corner[3][2]);
-	glEnd();
-}
-
-//le problème avec glTranslate et openGl en général, c'est qu'on au aucuns accès aux résultat des transformations que l'on fait, on est donc obligé de prédire le changement ou de le faire à la main.
-
-
-void doTPermutation()
-{
-    //T permutation
-    //R U' R’ U R’ F' R2 U R’ U R U' R’ F 
-    //from https://ruwix.com/the-rubiks-cube/how-to-solve-the-rubiks-cube-blindfolded-tutorial/ with changes because my F is the site F'. Same between U and U'
-    mrubiks = rotateFace(mrubiks, RIGHT, PI/2);
-    mrubiks = rotateFace(mrubiks, UP, -PI/2);
-    mrubiks = rotateFace(mrubiks, RIGHT, -PI/2);
-    mrubiks = rotateFace(mrubiks, UP, PI/2);
-    mrubiks = rotateFace(mrubiks, RIGHT, -PI/2);
-    mrubiks = rotateFace(mrubiks, FRONT, -PI/2);
-    mrubiks = rotateFace(mrubiks, RIGHT, PI/2);
-    mrubiks = rotateFace(mrubiks, RIGHT, PI/2);
-    mrubiks = rotateFace(mrubiks, UP, PI/2);
-    mrubiks = rotateFace(mrubiks, RIGHT, -PI/2);
-    mrubiks = rotateFace(mrubiks, UP, PI/2);
-    mrubiks = rotateFace(mrubiks, RIGHT, PI/2);
-    mrubiks = rotateFace(mrubiks, UP, -PI/2);
-    mrubiks = rotateFace(mrubiks, RIGHT, -PI/2);
-    mrubiks = rotateFace(mrubiks, FRONT, PI/2);
-}
-
-int* find(char* edgeName, Rubiks rubiks)
-{
-    int* result = malloc(3*sizeof(int));
-    for(int i=0; i<3; i++)
-        for(int j=0; j<3; j++)
-            for(int k=0; k<3; k++)
-                if(strcmp(edgeName, rubiks.cube[i][j][k].edgesNCornersName)==0)
-                {
-                    *result = i; 
-                    *(result+1) = j; 
-                    *(result+2) = k; 
-                }
-    return result;
-}
-
-void API(Rubiks rubiks)
-{
-    //Y permutation
-    //F' R U R’ U R U' R’ F R U' R’ U R’ F' R F 
-    //
-
-    char* edgesName[11] = {"FL","FR","DF","UF","UL","DL","DR","UB","BL","BR","BD"};
-    //All moves followed by the angle to move them, so so 1 is PI/2, -1 is -PI/2
-    int* edgesPreMoves[11] = {
-        (int[2]){LEFT,1},
-        (int[6]){UP,1,FRONT,1,UP,-1},
-        (int[6]){DOWN,-1,LEFT,1,LEFT,1},
-        (int[8]){RIGHT,1,FRONT,1,RIGHT,-1,LEFT,1},
-        (int[0]){},//no moves requiered to move it to the right pos
-        (int[4]){LEFT,1,LEFT,1},
-        (int[8]){DOWN,1,DOWN,1,LEFT,1,LEFT,1},//minus are for opposite rotations
-        (int[8]){RIGHT,-1,BACK,1,RIGHT,1,LEFT,-1},
-        (int[2]){LEFT,-1},
-        (int[6]){UP,-1,BACK,1,UP,1},
-        (int[6]){DOWN,1,LEFT,1,LEFT,1}
-    };
-    int premovesSize[11] = {2,6,6,8,0,4,8,8,2,6,6};
-    char* edgesDone[20] = {"FL","0","FR","0","DF","0","UF","0","DL","0","DR","0","UB","0","BL","0","BR","0","BD","0"};
-
-    int* rightBufferPos;
-    char* inBuffer = rubiks.cube[1][0][2].edgesNCornersName;//what in the buffer
-    printf("inBuffer %s", inBuffer);
-    fflush(stdout);
-    rightBufferPos = find(inBuffer, msolvedRubiks);//Where buffer is supposed to be
-
-    if(*(rightBufferPos) != 1 || *(rightBufferPos+1) != 0 || *(rightBufferPos+2) != 2)//the buffer isn't blocked 
-    {
-        int index=0;
-        printf("segFault ? ");
-        fflush(stdout);
-        for(index=0;strcmp(edgesName[index],inBuffer)!=0;index++);//We get the index of the buffer in edgesName
-       // while(strcmp(edgesName[index],inBuffer)!=0)
-       // {
-       //    index++;
-       // }
-        //apply the premoves
-        for(int i=0; i<premovesSize[index]; i=i+2)
-        {
-            float angle = PI/2*edgesPreMoves[index][i+1];
-            mrubiks = rotateFace(mrubiks, edgesPreMoves[index][i],angle);
-        }
-
-        doTPermutation();
-
-        //Do the opposites of the premoves
-        for(int i=premovesSize[index]-2; i>=0; i=i-2)
-        {
-            float angle = -PI/2*edgesPreMoves[index][i+1];
-            mrubiks = rotateFace(mrubiks, edgesPreMoves[index][i],angle);
-        }
-        //edgesDone[index*2+1] = "1";
-            //printf("%s,",edgesDone[19]);
-        //    fflush(stdout);
-    }
-    else//the buffer is blocked
-    {
-        
-    }
-
-        
-
-   /* 
-    printf("\n");
-    for(int i=0; i<3; i++)
-    {
-        for(int j=0; j<3; j++)
-        {
-            for(int k=0; k<3; k++)
-                //printf("%s\t,", rubiks.cube[i][j][k].edgesNCornersName);
-        printf("\n");
-        }
-    printf("\n");
-    }
-    */
-    int solved = isEqual(rubiks, msolvedRubiks);
-    //printf("Solved ? : %d ", solved);
-
-    //printf(";");
-    fflush(stdout);
-    
-}
-
-void resetCube()
-{
-    mrubiks = drawRubik();
-}
-
-int isEqual(Rubiks rubiks, Rubiks rubiks2)
-{
-    int equal = 1;
-    for(int i=0; i<3; i++)
-        for(int j=0; j<3; j++)
-            for(int k=0; k<3; k++)
-                if(rubiks.cube[i][j][k].edgesNCornersName != rubiks2.cube[i][j][k].edgesNCornersName)
-                    equal = 0;
-    return equal;
-}
-
-Rubiks drawRubik() {
-    int center[3] = {0,0,0};
+//set up every cubes in the rubiks. Basicly we create 27 cubes in the center then translate them away to the right positions. We also init other info about the cube position in the rubiks
+//this does the final init step. In the end, we have a struct with a 3x3x3 matrix inside, we also named cubes to be able to find where the should go.
+//front top left is the [0][0][0]
+//back down right is the [2][2][2]
+Rubiks initRubik() {
     Cube* cube[27];
     Rubiks* rubiks = malloc(sizeof(Rubiks));
 
     for(int i=0; i<27; i++){
-        cube[i] = drawCube();//Init les cubes;
+        cube[i] = initCube();//Init the cubes;
     }
    
-    //les places
-    //Face
+    //place them, translateCube doc is in movement.c
+    //pretty big chunk, can probably be refactored. But this is clear : we have 27 cube, we move call translateCube 27 times
+    //center
     translateCube(cube[0], -2.1, 0, 0);
     rubiks->cube[2][1][1] = *cube[0];//blue center
     rubiks->cube[2][1][1].edgesNCornersName = "B";
-    
-
-    translateCube(cube[1], 0, 0, 0);
-    rubiks->cube[1][1][1] = *cube[1];//centre (pas visible)
-    rubiks->cube[1][1][1].edgesNCornersName = "C";
-    
-    translateCube(cube[2], 2.1, 0, 0);
-    rubiks->cube[0][1][1] = *cube[2];//centre orange
-    rubiks->cube[0][1][1].edgesNCornersName = "O";
-
-    translateCube(cube[3], -2.1, -2.1, 0);
-    rubiks->cube[2][2][1] = *cube[3];
-    rubiks->cube[2][2][1].edgesNCornersName = "DB";
-
     translateCube(cube[4], 0, -2.1, 0);
     rubiks->cube[1][2][1] = *cube[4];//yellow center
     rubiks->cube[1][2][1].edgesNCornersName = "Y";
-    
-    translateCube(cube[5], 2.1, -2.1, 0);
-    rubiks->cube[0][2][1] = *cube[5];
-    rubiks->cube[0][2][1].edgesNCornersName = "DF";
-
-
-    translateCube(cube[6], -2.1, 2.1, 0);
-    rubiks->cube[2][0][1] = *cube[6];
-    rubiks->cube[2][0][1].edgesNCornersName = "UB";
-
-    translateCube(cube[7], 0, 2.1, 0);
-    rubiks->cube[1][0][1] = *cube[7];//centre blanc
-    rubiks->cube[1][0][1].edgesNCornersName = "W";
-
-    translateCube(cube[8], 2.1, 2.1, 0);
-    rubiks->cube[0][0][1] = *cube[8];
-    rubiks->cube[0][0][1].edgesNCornersName = "UF";
-    //Cross
     translateCube(cube[9], 0, 0, 2.1);
     rubiks->cube[1][1][0] = *cube[9];//Green center
     rubiks->cube[1][1][0].edgesNCornersName = "G";
     translateCube(cube[10], 0, 0, -2.1);
     rubiks->cube[1][1][2] = *cube[10];//Red center
     rubiks->cube[1][1][2].edgesNCornersName = "R";
+    translateCube(cube[7], 0, 2.1, 0);
+    rubiks->cube[1][0][1] = *cube[7];//white center 
+    rubiks->cube[1][0][1].edgesNCornersName = "W";
+    translateCube(cube[2], 2.1, 0, 0);
+    rubiks->cube[0][1][1] = *cube[2];//centre orange
+    rubiks->cube[0][1][1].edgesNCornersName = "O";
+    
+    translateCube(cube[1], 0, 0, 0);//does nothing
+    rubiks->cube[1][1][1] = *cube[1];//center (not visible)
+    rubiks->cube[1][1][1].edgesNCornersName = "C";
+
+    translateCube(cube[3], -2.1, -2.1, 0);
+    rubiks->cube[2][2][1] = *cube[3];
+    rubiks->cube[2][2][1].edgesNCornersName = "DB";
+    
+    translateCube(cube[5], 2.1, -2.1, 0);
+    rubiks->cube[0][2][1] = *cube[5];
+    rubiks->cube[0][2][1].edgesNCornersName = "DF";
+
+    translateCube(cube[6], -2.1, 2.1, 0);
+    rubiks->cube[2][0][1] = *cube[6];
+    rubiks->cube[2][0][1].edgesNCornersName = "UB";
+
+    translateCube(cube[8], 2.1, 2.1, 0);
+    rubiks->cube[0][0][1] = *cube[8];
+    rubiks->cube[0][0][1].edgesNCornersName = "UF";
+
     translateCube(cube[11], 0, 2.1, 2.1);
     rubiks->cube[1][0][0] = *cube[11];
     rubiks->cube[1][0][0].edgesNCornersName = "UL";
+
     translateCube(cube[12], 0, -2.1, 2.1);
     rubiks->cube[1][2][0] = *cube[12];
     rubiks->cube[1][2][0].edgesNCornersName = "DL";
@@ -365,6 +92,7 @@ Rubiks drawRubik() {
     translateCube(cube[17], 2.1, 0, -2.1);
     rubiks->cube[0][1][2] = *cube[17];
     rubiks->cube[0][1][2].edgesNCornersName = "FR";
+
     translateCube(cube[18], -2.1, 0, -2.1);
     rubiks->cube[2][1][2] = *cube[18];
     rubiks->cube[2][1][2].edgesNCornersName = "BR";
@@ -399,6 +127,92 @@ Rubiks drawRubik() {
 
 }
 
+//init a cube by getting 6 faces in the right position, also init some color related stuff
+Cube* initCube(){
+    //get 6 faces
+    Face bottomFace = initFace();
+	Face frontFace = initFace();
+	Face upFace = initFace();
+	Face backFace = initFace();
+	Face leftFace = initFace();
+	Face rightFace = initFace();
+	
+    //rotate the 6 faces 1 by 1 to make a cube
+    //to rotate 1 face we rotate 4 corners
+    //we have to rotate 5 face because 1 face is already in the right pos (from the init)
+    for(int i = 0; i<4; i++){
+	    memcpy(frontFace.corner[i], rotateCorner(frontFace.corner[i], PI/2, 'x'), sizeof frontFace.corner[i]);
+    }
+    for(int i = 0; i<4; i++){
+	    memcpy(upFace.corner[i], rotateCorner(upFace.corner[i], PI, 'x'), sizeof upFace.corner[i]);
+    }
+    for(int i = 0; i<4; i++){
+	    memcpy(backFace.corner[i], rotateCorner(backFace.corner[i], 3*PI/2, 'x'), sizeof backFace.corner[i]);
+    }
+    for(int i = 0; i<4; i++){
+	    memcpy(leftFace.corner[i], rotateCorner(leftFace.corner[i], PI/2, 'z'), sizeof leftFace.corner[i]);
+    }
+    for(int i = 0; i<4; i++){
+	    memcpy(rightFace.corner[i], rotateCorner(rightFace.corner[i], -PI/2, 'z'), sizeof rightFace.corner[i]);
+    }
+
+    //bottomFace already initialized as yellow
+    //bleu
+    frontFace.color[0] = 0;
+    frontFace.color[1] = 0;
+    frontFace.color[2] = 255;
+    //blanc
+    upFace.color[0] = 255;
+    upFace.color[1] = 255;
+    upFace.color[2] = 0;
+    //vert
+    backFace.color[0] = 0;
+    backFace.color[1] = 255;
+    backFace.color[2] = 0;
+    //blue
+    leftFace.color[0] = 255;
+    leftFace.color[1] = 0;
+    leftFace.color[2] = 0;
+    //orange
+    rightFace.color[0] = 255;
+    rightFace.color[1] = 153;
+    rightFace.color[2] = 51;
+
+
+    //send the cube back, but we have to allocate it for it to stay alive :)
+    Cube* cube = malloc(sizeof(Cube));
+    cube->face[0] = upFace; 
+    cube->face[1] = rightFace;
+    cube->face[2] = bottomFace;
+    cube->face[3] = leftFace;
+    cube->face[4] = frontFace;
+    cube->face[5] = backFace;
+    
+    return cube;
+}
+
+Face initFace(){
+    Face face;
+    face.color[0] = 255;
+    face.color[1] = 255;
+    face.color[2] = 255;
+    face.corner[0][0] = 1; //top left 
+    face.corner[0][1] = 1; 
+    face.corner[0][2] = -1; 
+    face.corner[1][0] = -1; //top right
+    face.corner[1][1] = 1 ; 
+    face.corner[1][2] = -1; 
+    face.corner[2][0] = -1; //bottom right
+    face.corner[2][1] = 1 ; 
+    face.corner[2][2] = 1 ; 
+    face.corner[3][0] = 1 ; //bottom left
+    face.corner[3][1] = 1 ; 
+    face.corner[3][2] = 1 ; 
+
+    return face;
+}
+
+//1 rubiks = 27 cubes
 void showRubiks(Rubiks rubiks)
 {
     for(int i=0; i<3; i++)
@@ -407,19 +221,85 @@ void showRubiks(Rubiks rubiks)
         {
             for(int k=0; k<3; k++)
             {
-                //if(i!=1 || j!=0 || k != 0)
+                if(i!=2 || j!=2 || k != 2) //Useful
                 showCube(rubiks.cube[i][j][k]);
             }
         }
     }
 }
 
+//1 cube = 6 faces
+void showCube(Cube cube){
+    for(int i=0; i<6; i++){
+        showFace(cube.face[i]);
+    }
+}
+
+//show a shape made of 4 corners, glVertex3f to set a corner, we get the corner coordinates in the structure we have set before
+void showFace(Face face) {
+    glBegin(GL_QUADS);
+    glColor3ub(face.color[0], face.color[1], face.color[2]);
+    //glNormal3f(0.0, 1.0, 0.0);
+	glVertex3f(face.corner[0][0], face.corner[0][1], face.corner[0][2]);
+	glVertex3f(face.corner[1][0], face.corner[1][1], face.corner[1][2]);
+    //Commented for now but this line adds gradients to the color
+    //glColor3f(face.color[0] - 0.2, face.color[1] - 0.2, face.color[2]);
+	glVertex3f(face.corner[2][0], face.corner[2][1], face.corner[2][2]);
+	glVertex3f(face.corner[3][0], face.corner[3][1], face.corner[3][2]);
+	glEnd();
+}
+
+//Generate random numbers. First we get how many moves will be done to scramble, then what the moves will be.
+Rubiks scrambleRubiks(Rubiks rubiks)
+{
+    char* enumRotation2Char[6] = {
+        "DOWN",
+        "FRONT",
+        "UP",
+        "BACK",
+        "LEFT",
+        "RIGHT"
+    };
+    srand(time(NULL));//init the rand generator 
+
+    int nbMoves = (rand() % 50)+20;//between 20 and 69 scramble move
+    printf("\nScramble sequence : \n"); 
+    float angle = PI/2;//we could randomize this too, but it's ok I guess
+    for(int i=0;i<nbMoves; i++)
+    {
+        int move = rand() % 6;  
+        printf("%s,",enumRotation2Char[move]);
+        rubiks = rotateFace(rubiks, move,angle);  
+    }
+    printf("\n");
+    fflush(stdout);
+
+    return rubiks;
+}
+
+//Entry function for the solver to act. Had no time to do fancy stuff
+void API(Rubiks rubiks)
+{
+    resetNbMovement();//the number of movements the rubiks made (incremented in movement.c)
+    printf("SolvingSequence : \n");
+    mrubiks = solve(mrubiks, msolvedRubiks);
+    printf("\"Resolu\" en %d movements", getNbMovement());
+    fflush(stdout);
+}
+
+//reset the global cube
+void resetCube()
+{
+    mrubiks = initRubik();
+}
+
+
+
 void display(void)
 {
     //TODO DRAW = INIT ???
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     showRubiks(mrubiks);
-    updateLookAt();
     drawAxis();
     glutSwapBuffers();
 }
@@ -427,13 +307,8 @@ void display(void)
 void
 init(void)
 {
-   mrubiks = drawRubik();
-   msolvedRubiks = drawRubik();
-   printf("out\n");
-	for(int i=0; i<20; i++)
-	{
-	}
-    fflush(stdout);
+   mrubiks = initRubik();
+   msolvedRubiks = initRubik();
   /* Use depth buffering for hidden surface elimination. */
   glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable(GL_DEPTH_TEST);
@@ -457,7 +332,6 @@ init(void)
 void 
 arrows (int key, int x, int y) 
 {
-
     double delta = 0.05;
   	switch(key)
 	{
@@ -482,6 +356,7 @@ arrows (int key, int x, int y)
         camPosTheta=PI/2;
     if(camPosTheta<-PI/2)
         camPosTheta=-PI/2;;
+    updateLookAt();
 	glutPostRedisplay();
 }
 void key (unsigned char key, int xmouse, int ymouse)
@@ -512,27 +387,44 @@ void key (unsigned char key, int xmouse, int ymouse)
             break;
         case '1':
             resetCube();
+            break;
         case '5':
             API(mrubiks);
+            break;
+        case '6':
+            mrubiks = scrambleRubiks(mrubiks);
             break;
     }
     glutPostRedisplay();
 }
 
+//just for the sake of knowing where i am, useful when developping
+void drawAxis() {
+    glColor3f(1.0, 1.0, 1.0);
+    glRasterPos3i(0,0,4);
+    glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, 'Z');
+    glRasterPos3i(0,4,0);
+    glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, 'Y');
+    glRasterPos3i(4,0,0);
+    glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, 'X');
+    glRasterPos3i(0,0,0);
+    glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, 'O');
+	
+}
+
+//place the camera
 void updateLookAt()
 {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(camPosR * cos(camPosTheta) * cos(camPosPhi)
+    gluLookAt(camPosR * cos(camPosTheta) * cos(camPosPhi)//x,y,z coords of the camera
             ,camPosR * sin(camPosTheta)
             , camPosR * cos(camPosTheta)* sin(camPosPhi),  
-            0.0, 0.0, 0.0,      /* center is at (0,0,0) */
-            0.0, 1.0, 0.0);      /* up is in positive Y direction */
+            0.0, 0.0, 0.0,      //where the camera is looking
+            0.0, 1.0, 0.0);      //where is up
 }
 
-
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
@@ -545,5 +437,5 @@ main(int argc, char **argv)
   printf("Version de OpenGL %s", glGetString(GL_VERSION));
   fflush(stdout);
   glutMainLoop();
-  return 0;             /* ANSI C requires main to return int. */
+  return 0;    
 }

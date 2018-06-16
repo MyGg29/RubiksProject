@@ -1,3 +1,12 @@
+//reste de code non utilisé
+//utile pendant que j'apprenait comment opengl marchais
+//
+//
+//
+//
+//
+//
+//
 //Mise en places des cubes du rubiks
 //
 
