@@ -5,6 +5,7 @@
 
 #define PI 3.14159265
 
+int verboseMoves = 1; //controle the printf
 int nbMovement=0;//used to get the score
 char* enumRotation2Char[6] = {
     "DOWN",
@@ -81,7 +82,9 @@ Cube rotateCube(Cube cube, float angle ,char axe)
 Rubiks rotateFace(Rubiks rubiks, char face, float angle)
 {
     nbMovement++;
-    printf("%s,",enumRotation2Char[(int)face]);
+
+ //   if(verboseMoves==1)
+//        printf("%s,",enumRotation2Char[(int)face]);
     //pour chaque cube d'une face ....
     Cube movedCubes[3][3];
     for(int i=0; i<3; i++)
@@ -211,4 +214,8 @@ void resetNbMovement()
 int getNbMovement()
 {
     return nbMovement;
+}
+void setVerboseMoves(int state)
+{
+    verboseMoves = state;
 }

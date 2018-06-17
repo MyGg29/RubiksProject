@@ -7,6 +7,7 @@
 
 #define PI 3.14159265
 
+int verbose = 0;
 double camPosR = 9, camPosTheta = 0, camPosPhi = 0;
 Rubiks mrubiks;//the rubiks we are
 Rubiks msolvedRubiks;//the rubiks we aim to be
@@ -263,15 +264,16 @@ Rubiks scrambleRubiks(Rubiks rubiks)
     srand(time(NULL));//init the rand generator 
 
     int nbMoves = (rand() % 50)+20;//between 20 and 69 scramble move
-    printf("\nScramble sequence : \n"); 
+    //if(verbose == 1)
+        //printf("\nScramble sequence : \n"); 
     float angle = PI/2;//we could randomize this too, but it's ok I guess
     for(int i=0;i<nbMoves; i++)
     {
         int move = rand() % 6;  
-        printf("%s,",enumRotation2Char[move]);
+    //    printf("%s,",enumRotation2Char[move]);
         rubiks = rotateFace(rubiks, move,angle);  
     }
-    printf("\n");
+    //printf("\n");
     fflush(stdout);
 
     return rubiks;
@@ -282,9 +284,36 @@ void API(Rubiks rubiks)
 {
     resetNbMovement();//the number of movements the rubiks made (incremented in movement.c)
     printf("SolvingSequence : \n");
+    clock_t begin = clock();
     mrubiks = solve(mrubiks, msolvedRubiks);
+    clock_t end = clock();
+    printf("n\"Resolu\" en %f s", ((double)end-begin)/CLOCKS_PER_SEC);
     printf("\n\"Resolu\" en %d movements", getNbMovement());
     fflush(stdout);
+}
+
+//do stats
+void stats()
+{
+    int n = 100;//the population 
+    double aveElapsedTime = 0;
+    int aveNbMove = 0;
+    setVerbose(0);
+    
+    setVerboseMoves(0);
+    for(int i=0;i<n;i++)
+    {
+        resetNbMovement();//the number of movements the rubiks made (incremented in movement.c)
+        resetCube();
+        scrambleRubiks(mrubiks);
+        clock_t begin = clock();
+        mrubiks = solve(mrubiks, msolvedRubiks);
+        clock_t end = clock();
+        aveElapsedTime += (((double)end-begin)/CLOCKS_PER_SEC);
+        aveNbMove += getNbMovement();
+    }
+    printf("\n%d resolutions en %f s en moyennes\n",n, aveElapsedTime/n);
+    printf("\n%d resolutions en %d movements en moyennes\n",n, aveNbMove/n);
 }
 
 //reset the global cube
@@ -394,6 +423,8 @@ void key (unsigned char key, int xmouse, int ymouse)
         case '6':
             mrubiks = scrambleRubiks(mrubiks);
             break;
+        case '9':
+            stats();
     }
     glutPostRedisplay();
 }
@@ -422,6 +453,11 @@ void updateLookAt()
             , camPosR * cos(camPosTheta)* sin(camPosPhi),  
             0.0, 0.0, 0.0,      //where the camera is looking
             0.0, 1.0, 0.0);      //where is up
+}
+
+void setVerbose(int state)
+{
+    verbose = state;
 }
 
 int main(int argc, char **argv)

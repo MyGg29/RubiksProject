@@ -10,7 +10,6 @@ typedef enum {
 }enumRotation;
 
 
-
 typedef struct _Face {
     GLfloat corner[4][3];
     GLfloat color[3];
@@ -63,3 +62,7 @@ Rubiks scrambleRubiks(Rubiks rubiks);
 Rubiks solve(Rubiks rubiks, Rubiks solvedRubiks);
 void resetNbMovement();
 int getNbMovement();
+void resetCube();
+void stats();
+void setVerbose(int state);
+void setVerboseMoves(int state);
