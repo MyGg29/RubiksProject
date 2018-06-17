@@ -84,7 +84,7 @@ Rubiks rotateFace(Rubiks rubiks, char face, float angle)
     nbMovement++;
 
  //   if(verboseMoves==1)
-//        printf("%s,",enumRotation2Char[(int)face]);
+        printf("%s,",enumRotation2Char[(int)face]);
     //pour chaque cube d'une face ....
     Cube movedCubes[3][3];
     for(int i=0; i<3; i++)

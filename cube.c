@@ -222,7 +222,7 @@ void showRubiks(Rubiks rubiks)
         {
             for(int k=0; k<3; k++)
             {
-                if(i!=2 || j!=2 || k != 2) //Useful
+                //if(i!=0 || j!=0 || k != 2) //Useful
                 showCube(rubiks.cube[i][j][k]);
             }
         }
@@ -265,15 +265,15 @@ Rubiks scrambleRubiks(Rubiks rubiks)
 
     int nbMoves = (rand() % 50)+20;//between 20 and 69 scramble move
     //if(verbose == 1)
-        //printf("\nScramble sequence : \n"); 
+        printf("\nScramble sequence : \n"); 
     float angle = PI/2;//we could randomize this too, but it's ok I guess
     for(int i=0;i<nbMoves; i++)
     {
         int move = rand() % 6;  
-    //    printf("%s,",enumRotation2Char[move]);
+        printf("%s,",enumRotation2Char[move]);
         rubiks = rotateFace(rubiks, move,angle);  
     }
-    //printf("\n");
+    printf("\n");
     fflush(stdout);
 
     return rubiks;
@@ -287,7 +287,7 @@ void API(Rubiks rubiks)
     clock_t begin = clock();
     mrubiks = solve(mrubiks, msolvedRubiks);
     clock_t end = clock();
-    printf("n\"Resolu\" en %f s", ((double)end-begin)/CLOCKS_PER_SEC);
+    printf("\n\"Resolu\" en %f s", ((double)end-begin)/CLOCKS_PER_SEC);
     printf("\n\"Resolu\" en %d movements", getNbMovement());
     fflush(stdout);
 }
@@ -305,7 +305,7 @@ void stats()
     {
         resetNbMovement();//the number of movements the rubiks made (incremented in movement.c)
         resetCube();
-        scrambleRubiks(mrubiks);
+        mrubiks = scrambleRubiks(mrubiks);
         clock_t begin = clock();
         mrubiks = solve(mrubiks, msolvedRubiks);
         clock_t end = clock();
@@ -375,11 +375,7 @@ arrows (int key, int x, int y)
 			break;
 		case GLUT_KEY_RIGHT:
             camPosPhi += delta;
-        case GLUT_KEY_F1:
-            camPosR += 1;
-        case GLUT_KEY_F2:
-            camPosR -= 1;
-		break;
+		    break;
 	}
     if(camPosTheta>PI/2)
         camPosTheta=PI/2;
@@ -465,7 +461,7 @@ int main(int argc, char **argv)
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
   glutInitWindowSize(500,500);
-  glutCreateWindow("red 3D lighted cube");
+  glutCreateWindow("Rubik's cube by Gwendal");
   glutDisplayFunc(display);
   glutSpecialFunc(arrows);
   glutKeyboardFunc(key);
