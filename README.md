@@ -7,6 +7,7 @@ Pour compiler :
     make
 tout les -lxxx sont des linkers files qui permettent d'importer les dependances des librairies importées
 
+main in cube.c
 
 ATTENTION, la resolution marche presque. 
 ./cube pour lancer le programme
